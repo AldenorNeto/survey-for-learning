@@ -3,9 +3,905 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello World</title>
+    <title>Pesquisa de Satisfação no Trabalho</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f0f4f8;
+        color: #2d3748;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+
+      header h1 {
+        font-size: 1.8rem;
+        color: #1a365d;
+        margin-bottom: 0.5rem;
+      }
+
+      header p {
+        color: #718096;
+        font-size: 0.95rem;
+      }
+
+      .progress-bar-container {
+        background: #e2e8f0;
+        border-radius: 999px;
+        height: 8px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4299e1, #667eea);
+        border-radius: 999px;
+        transition: width 0.4s ease;
+        width: 0%;
+      }
+
+      .section-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.8rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+        border-left: 5px solid #4299e1;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2b6cb0;
+        margin-bottom: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .section-title .icon {
+        font-size: 1.3rem;
+      }
+
+      .question {
+        margin-bottom: 1.4rem;
+      }
+
+      .question:last-child {
+        margin-bottom: 0;
+      }
+
+      .question label.question-text {
+        display: block;
+        font-size: 0.95rem;
+        margin-bottom: 0.7rem;
+        color: #4a5568;
+        line-height: 1.5;
+      }
+
+      .question-number {
+        font-weight: 700;
+        color: #2b6cb0;
+        margin-right: 0.3rem;
+      }
+
+      .scale {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .scale input[type="radio"] {
+        display: none;
+      }
+
+      .scale label {
+        flex: 1;
+        min-width: 44px;
+        text-align: center;
+        padding: 0.55rem 0.2rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #718096;
+        transition: all 0.2s;
+        background: #f7fafc;
+      }
+
+      .scale label:hover {
+        border-color: #4299e1;
+        color: #2b6cb0;
+        background: #ebf8ff;
+      }
+
+      .scale input[type="radio"]:checked + label {
+        background: #4299e1;
+        border-color: #4299e1;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(66, 153, 225, 0.4);
+      }
+
+      .scale-legend {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.3rem;
+        font-size: 0.72rem;
+        color: #a0aec0;
+        padding: 0 2px;
+      }
+
+      .submit-area {
+        text-align: center;
+        margin-top: 2rem;
+      }
+
+      button[type="submit"] {
+        background: linear-gradient(135deg, #4299e1, #667eea);
+        color: white;
+        border: none;
+        padding: 0.9rem 2.8rem;
+        font-size: 1rem;
+        font-weight: 700;
+        border-radius: 999px;
+        cursor: pointer;
+        letter-spacing: 0.03em;
+        transition:
+          opacity 0.2s,
+          transform 0.1s;
+        box-shadow: 0 4px 14px rgba(66, 153, 225, 0.4);
+      }
+
+      button[type="submit"]:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+
+      button[type="submit"]:active {
+        transform: translateY(0);
+      }
+
+      /* Result screen */
+      #result {
+        display: none;
+        text-align: center;
+        background: #fff;
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+      }
+
+      #result .emoji {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+      }
+
+      #result h2 {
+        font-size: 1.6rem;
+        color: #1a365d;
+        margin-bottom: 0.5rem;
+      }
+
+      #result .score-display {
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #4299e1, #667eea);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 1rem 0;
+      }
+
+      #result .score-label {
+        color: #718096;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .dimension-results {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+        text-align: left;
+      }
+
+      .dim-card {
+        background: #f7fafc;
+        border-radius: 12px;
+        padding: 1rem;
+        border-top: 4px solid #4299e1;
+      }
+
+      .dim-card .dim-name {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #2b6cb0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.4rem;
+      }
+
+      .dim-card .dim-score {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #2d3748;
+      }
+
+      .dim-card .dim-max {
+        font-size: 0.8rem;
+        color: #a0aec0;
+      }
+
+      .dim-bar {
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 999px;
+        margin-top: 0.5rem;
+        overflow: hidden;
+      }
+
+      .dim-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #4299e1, #667eea);
+      }
+
+      #result .message {
+        font-size: 1rem;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-top: 1rem;
+      }
+
+      .restart-btn {
+        margin-top: 1.5rem;
+        background: transparent;
+        border: 2px solid #4299e1;
+        color: #4299e1;
+        padding: 0.7rem 2rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+
+      .restart-btn:hover {
+        background: #4299e1;
+        color: #fff;
+      }
+
+      @media (max-width: 480px) {
+        header h1 {
+          font-size: 1.4rem;
+        }
+        .scale label {
+          font-size: 0.8rem;
+          padding: 0.5rem 0.1rem;
+        }
+      }
+
+      /* Access denied screen */
+      #accessDenied {
+        display: none;
+        text-align: center;
+        background: #fff;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+      }
+
+      #accessDenied .lock-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+      }
+
+      #accessDenied h2 {
+        font-size: 1.4rem;
+        color: #1a365d;
+        margin-bottom: 0.8rem;
+      }
+
+      #accessDenied p {
+        color: #718096;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      /* Main content hidden until token is validated */
+      #mainContent {
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <h1>Hello World</h1>
+    <!-- Access denied screen (shown when token is missing/wrong) -->
+    <div id="accessDenied" class="container">
+      <div class="lock-icon">🔒</div>
+      <h2>Acesso restrito</h2>
+      <p>
+        Este formulário é de uso exclusivo.<br />Utilize o link enviado para
+        você.
+      </p>
+    </div>
+
+    <div id="mainContent" class="container">
+      <header>
+        <h1>📋 Pesquisa de Satisfação no Trabalho</h1>
+        <p>
+          Suas respostas são anônimas e nos ajudam a melhorar o ambiente de
+          trabalho.
+        </p>
+      </header>
+
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <form id="surveyForm" novalidate>
+        <!-- 1. Ambiente de Trabalho -->
+        <div class="section-card">
+          <div class="section-title">
+            <span class="icon">🏢</span> Ambiente de Trabalho
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">1.</span>
+              As condições físicas do meu local de trabalho (espaço, iluminação,
+              equipamentos) são adequadas.
+            </label>
+            <div class="scale" role="group" aria-label="Questão 1">
+              <input type="radio" name="q1" id="q1_1" value="1" /><label
+                for="q1_1"
+                >1</label
+              >
+              <input type="radio" name="q1" id="q1_2" value="2" /><label
+                for="q1_2"
+                >2</label
+              >
+              <input type="radio" name="q1" id="q1_3" value="3" /><label
+                for="q1_3"
+                >3</label
+              >
+              <input type="radio" name="q1" id="q1_4" value="4" /><label
+                for="q1_4"
+                >4</label
+              >
+              <input type="radio" name="q1" id="q1_5" value="5" /><label
+                for="q1_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">2.</span>
+              Me sinto seguro(a) e confortável no ambiente onde trabalho.
+            </label>
+            <div class="scale" role="group" aria-label="Questão 2">
+              <input type="radio" name="q2" id="q2_1" value="1" /><label
+                for="q2_1"
+                >1</label
+              >
+              <input type="radio" name="q2" id="q2_2" value="2" /><label
+                for="q2_2"
+                >2</label
+              >
+              <input type="radio" name="q2" id="q2_3" value="3" /><label
+                for="q2_3"
+                >3</label
+              >
+              <input type="radio" name="q2" id="q2_4" value="4" /><label
+                for="q2_4"
+                >4</label
+              >
+              <input type="radio" name="q2" id="q2_5" value="5" /><label
+                for="q2_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Liderança -->
+        <div class="section-card" style="border-left-color: #9f7aea">
+          <div class="section-title" style="color: #6b46c1">
+            <span class="icon">👔</span> Liderança
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">3.</span>
+              Meu(minha) gestor(a) me dá feedbacks claros e construtivos sobre
+              meu desempenho.
+            </label>
+            <div class="scale" role="group" aria-label="Questão 3">
+              <input type="radio" name="q3" id="q3_1" value="1" /><label
+                for="q3_1"
+                >1</label
+              >
+              <input type="radio" name="q3" id="q3_2" value="2" /><label
+                for="q3_2"
+                >2</label
+              >
+              <input type="radio" name="q3" id="q3_3" value="3" /><label
+                for="q3_3"
+                >3</label
+              >
+              <input type="radio" name="q3" id="q3_4" value="4" /><label
+                for="q3_4"
+                >4</label
+              >
+              <input type="radio" name="q3" id="q3_5" value="5" /><label
+                for="q3_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">4.</span>
+              Sinto que minha liderança me apoia e está disponível quando
+              preciso.
+            </label>
+            <div class="scale" role="group" aria-label="Questão 4">
+              <input type="radio" name="q4" id="q4_1" value="1" /><label
+                for="q4_1"
+                >1</label
+              >
+              <input type="radio" name="q4" id="q4_2" value="2" /><label
+                for="q4_2"
+                >2</label
+              >
+              <input type="radio" name="q4" id="q4_3" value="3" /><label
+                for="q4_3"
+                >3</label
+              >
+              <input type="radio" name="q4" id="q4_4" value="4" /><label
+                for="q4_4"
+                >4</label
+              >
+              <input type="radio" name="q4" id="q4_5" value="5" /><label
+                for="q4_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Colegas -->
+        <div class="section-card" style="border-left-color: #48bb78">
+          <div class="section-title" style="color: #276749">
+            <span class="icon">🤝</span> Relacionamento com Colegas
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">5.</span>
+              Existe um espírito de colaboração e respeito mútuo entre minha
+              equipe.
+            </label>
+            <div class="scale" role="group" aria-label="Questão 5">
+              <input type="radio" name="q5" id="q5_1" value="1" /><label
+                for="q5_1"
+                >1</label
+              >
+              <input type="radio" name="q5" id="q5_2" value="2" /><label
+                for="q5_2"
+                >2</label
+              >
+              <input type="radio" name="q5" id="q5_3" value="3" /><label
+                for="q5_3"
+                >3</label
+              >
+              <input type="radio" name="q5" id="q5_4" value="4" /><label
+                for="q5_4"
+                >4</label
+              >
+              <input type="radio" name="q5" id="q5_5" value="5" /><label
+                for="q5_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">6.</span>
+              Me sinto parte de um time e tenho bom relacionamento com meus
+              colegas.
+            </label>
+            <div class="scale" role="group" aria-label="Questão 6">
+              <input type="radio" name="q6" id="q6_1" value="1" /><label
+                for="q6_1"
+                >1</label
+              >
+              <input type="radio" name="q6" id="q6_2" value="2" /><label
+                for="q6_2"
+                >2</label
+              >
+              <input type="radio" name="q6" id="q6_3" value="3" /><label
+                for="q6_3"
+                >3</label
+              >
+              <input type="radio" name="q6" id="q6_4" value="4" /><label
+                for="q6_4"
+                >4</label
+              >
+              <input type="radio" name="q6" id="q6_5" value="5" /><label
+                for="q6_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Remuneração -->
+        <div class="section-card" style="border-left-color: #ed8936">
+          <div class="section-title" style="color: #c05621">
+            <span class="icon">💰</span> Remuneração e Benefícios
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">7.</span>
+              Considero meu salário justo e compatível com minhas
+              responsabilidades e o mercado.
+            </label>
+            <div class="scale" role="group" aria-label="Questão 7">
+              <input type="radio" name="q7" id="q7_1" value="1" /><label
+                for="q7_1"
+                >1</label
+              >
+              <input type="radio" name="q7" id="q7_2" value="2" /><label
+                for="q7_2"
+                >2</label
+              >
+              <input type="radio" name="q7" id="q7_3" value="3" /><label
+                for="q7_3"
+                >3</label
+              >
+              <input type="radio" name="q7" id="q7_4" value="4" /><label
+                for="q7_4"
+                >4</label
+              >
+              <input type="radio" name="q7" id="q7_5" value="5" /><label
+                for="q7_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">8.</span>
+              Os benefícios oferecidos pela empresa (plano de saúde, vale, etc.)
+              atendem às minhas necessidades.
+            </label>
+            <div class="scale" role="group" aria-label="Questão 8">
+              <input type="radio" name="q8" id="q8_1" value="1" /><label
+                for="q8_1"
+                >1</label
+              >
+              <input type="radio" name="q8" id="q8_2" value="2" /><label
+                for="q8_2"
+                >2</label
+              >
+              <input type="radio" name="q8" id="q8_3" value="3" /><label
+                for="q8_3"
+                >3</label
+              >
+              <input type="radio" name="q8" id="q8_4" value="4" /><label
+                for="q8_4"
+                >4</label
+              >
+              <input type="radio" name="q8" id="q8_5" value="5" /><label
+                for="q8_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Crescimento -->
+        <div class="section-card" style="border-left-color: #f6ad55">
+          <div class="section-title" style="color: #975a16">
+            <span class="icon">🚀</span> Crescimento e Desenvolvimento
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">9.</span>
+              Vejo oportunidades reais de crescimento e evolução de carreira na
+              empresa.
+            </label>
+            <div class="scale" role="group" aria-label="Questão 9">
+              <input type="radio" name="q9" id="q9_1" value="1" /><label
+                for="q9_1"
+                >1</label
+              >
+              <input type="radio" name="q9" id="q9_2" value="2" /><label
+                for="q9_2"
+                >2</label
+              >
+              <input type="radio" name="q9" id="q9_3" value="3" /><label
+                for="q9_3"
+                >3</label
+              >
+              <input type="radio" name="q9" id="q9_4" value="4" /><label
+                for="q9_4"
+                >4</label
+              >
+              <input type="radio" name="q9" id="q9_5" value="5" /><label
+                for="q9_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+
+          <div class="question">
+            <label class="question-text">
+              <span class="question-number">10.</span>
+              A empresa investe no meu desenvolvimento profissional
+              (treinamentos, capacitações, etc.).
+            </label>
+            <div class="scale" role="group" aria-label="Questão 10">
+              <input type="radio" name="q10" id="q10_1" value="1" /><label
+                for="q10_1"
+                >1</label
+              >
+              <input type="radio" name="q10" id="q10_2" value="2" /><label
+                for="q10_2"
+                >2</label
+              >
+              <input type="radio" name="q10" id="q10_3" value="3" /><label
+                for="q10_3"
+                >3</label
+              >
+              <input type="radio" name="q10" id="q10_4" value="4" /><label
+                for="q10_4"
+                >4</label
+              >
+              <input type="radio" name="q10" id="q10_5" value="5" /><label
+                for="q10_5"
+                >5</label
+              >
+            </div>
+            <div class="scale-legend">
+              <span>Discordo totalmente</span><span>Concordo totalmente</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="submit-area">
+          <button type="submit">Enviar respostas →</button>
+        </div>
+      </form>
+
+      <!-- Result screen -->
+      <div id="result">
+        <div class="emoji" id="resultEmoji">😊</div>
+        <h2>Obrigado pela sua participação!</h2>
+        <div class="score-display" id="scoreDisplay"></div>
+        <div class="score-label">pontos de 50 possíveis</div>
+
+        <div class="dimension-results" id="dimensionResults"></div>
+
+        <p class="message" id="resultMessage"></p>
+
+        <button class="restart-btn" onclick="restart()">
+          Responder novamente
+        </button>
+      </div>
+    </div>
+    </div> <!-- end #mainContent -->
+
+    <script>
+      const questions = [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7",
+        "q8",
+        "q9",
+        "q10",
+      ];
+      const dimensions = [
+        { name: "🏢 Ambiente", qs: ["q1", "q2"], color: "#4299e1" },
+        { name: "👔 Liderança", qs: ["q3", "q4"], color: "#9f7aea" },
+        { name: "🤝 Colegas", qs: ["q5", "q6"], color: "#48bb78" },
+        { name: "💰 Remuneração", qs: ["q7", "q8"], color: "#ed8936" },
+        { name: "🚀 Crescimento", qs: ["q9", "q10"], color: "#f6ad55" },
+      ];
+
+      // Live progress bar
+      document.querySelectorAll('input[type="radio"]').forEach((radio) => {
+        radio.addEventListener("change", updateProgress);
+      });
+
+      function updateProgress() {
+        const answered = questions.filter((q) =>
+          document.querySelector(`input[name="${q}"]:checked`),
+        ).length;
+        document.getElementById("progressBar").style.width =
+          (answered / questions.length) * 100 + "%";
+      }
+
+      document
+        .getElementById("surveyForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          // Validate all answered
+          const unanswered = questions.filter(
+            (q) => !document.querySelector(`input[name="${q}"]:checked`),
+          );
+          if (unanswered.length > 0) {
+            alert(
+              `Por favor, responda todas as ${unanswered.length} questão(ões) restante(s) antes de enviar.`,
+            );
+            // Scroll to first unanswered
+            const firstUnanswered = document.querySelector(
+              `input[name="${unanswered[0]}"]`,
+            );
+            firstUnanswered
+              .closest(".question")
+              .scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+          }
+
+          // Calculate scores
+          let total = 0;
+          const dimScores = dimensions.map((dim) => {
+            const score = dim.qs.reduce((sum, q) => {
+              return (
+                sum +
+                parseInt(
+                  document.querySelector(`input[name="${q}"]:checked`).value,
+                )
+              );
+            }, 0);
+            total += score;
+            return { ...dim, score };
+          });
+
+          // Show result
+          document.getElementById("surveyForm").style.display = "none";
+          const result = document.getElementById("result");
+          result.style.display = "block";
+          result.scrollIntoView({ behavior: "smooth" });
+
+          // Score display
+          document.getElementById("scoreDisplay").textContent = total;
+
+          // Emoji & message
+          const pct = total / 50;
+          let emoji, message;
+          if (pct >= 0.85) {
+            emoji = "🤩";
+            message =
+              "Excelente! Você demonstra um alto nível de satisfação no trabalho. Continue assim — um ambiente positivo é fundamental para o desempenho e bem-estar de todos.";
+          } else if (pct >= 0.65) {
+            emoji = "😊";
+            message =
+              "Bom resultado! No geral você está satisfeito, mas há pontos que merecem atenção. Os temas com pontuação mais baixa podem ser o foco de melhorias.";
+          } else if (pct >= 0.45) {
+            emoji = "😐";
+            message =
+              "Resultado moderado. Existem áreas importantes que precisam de atenção. Suas respostas são valiosas para identificarmos onde podemos melhorar.";
+          } else {
+            emoji = "😟";
+            message =
+              "Sua satisfação está abaixo do esperado. Agradecemos sua honestidade — suas respostas são essenciais para que possamos promover mudanças significativas.";
+          }
+
+          document.getElementById("resultEmoji").textContent = emoji;
+          document.getElementById("resultMessage").textContent = message;
+
+          // Dimension cards
+          const container = document.getElementById("dimensionResults");
+          container.innerHTML = "";
+          dimScores.forEach((dim) => {
+            const pctDim = (dim.score / 10) * 100;
+            container.innerHTML += `
+        <div class="dim-card">
+          <div class="dim-name">${dim.name}</div>
+          <div class="dim-score">${dim.score} <span class="dim-max">/ 10</span></div>
+          <div class="dim-bar">
+            <div class="dim-bar-fill" style="width: ${pctDim}%; background: linear-gradient(90deg, ${dim.color}, ${dim.color}cc);"></div>
+          </div>
+        </div>`;
+          });
+        });
+
+      function restart() {
+        document.getElementById("surveyForm").reset();
+        document.getElementById("surveyForm").style.display = "block";
+        document.getElementById("result").style.display = "none";
+        document.getElementById("progressBar").style.width = "0%";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // ── Token verification ──────────────────────────────────────────────
+      // Only the SHA-256 hash of the token is stored here — never the token itself.
+      const VALID_HASH =
+        "997535e492364943b6a43af92386d57db8d81c5adf58e747e176ac74225250bb";
+
+      async function sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+        return Array.from(new Uint8Array(hashBuffer))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      async function checkToken() {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token") || "";
+        const hash = await sha256(token);
+
+        if (hash === VALID_HASH) {
+          document.getElementById("mainContent").style.display = "block";
+        } else {
+          document.getElementById("accessDenied").style.display = "block";
+        }
+      }
+
+      checkToken();
+      // ────────────────────────────────────────────────────────────────────
+    </script>
   </body>
 </html>
