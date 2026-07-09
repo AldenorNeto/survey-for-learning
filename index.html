@@ -332,6 +332,35 @@
       #mainContent {
         display: none;
       }
+
+      /* ── Device dashboard ── */
+      #deviceGrid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+
+      .d-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: #edf2f7;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        padding: 0.28rem 0.7rem;
+        font-size: 0.72rem;
+        color: #4a5568;
+        white-space: nowrap;
+      }
+
+      .d-chip .d-icon { font-size: 0.85rem; }
+      .d-chip .d-label { color: #a0aec0; margin-right: 0.15rem; }
+      .d-chip .d-val   { font-weight: 600; color: #2d3748; }
+
+      .d-chip.warn { background: #fff5f5; border-color: #fed7d7; }
+      .d-chip.warn .d-val { color: #c53030; }
+      .d-chip.ok   { background: #f0fff4; border-color: #c6f6d5; }
+      .d-chip.ok   .d-val { color: #276749; }
     </style>
   </head>
   <body>
@@ -350,6 +379,11 @@
         <h1>📋 Pesquisa de Satisfação no Trabalho</h1>
         <p id="welcomeMsg">Suas respostas são anônimas e nos ajudam a melhorar o ambiente de trabalho.</p>
       </header>
+
+      <!-- Device info dashboard -->
+      <div id="deviceDashboard" style="display:none; margin-bottom:1.5rem;">
+        <div id="deviceGrid"></div>
+      </div>
 
       <div class="progress-bar-container">
         <div class="progress-bar" id="progressBar"></div>
@@ -893,6 +927,7 @@
         if (hash === VALID_HASH) {
           document.getElementById("mainContent").style.display = "block";
           fetchIP();
+          loadDeviceInfo();
         } else {
           document.getElementById("accessDenied").style.display = "block";
         }
@@ -908,6 +943,113 @@
           // Silently keep the default message if the request fails
         }
       }
+
+      // ── Device dashboard ─────────────────────────────────────────────────
+      function chip(icon, label, val, cls = "") {
+        return `<span class="d-chip ${cls}">
+          <span class="d-icon">${icon}</span>
+          <span class="d-label">${label}</span>
+          <span class="d-val">${val}</span>
+        </span>`;
+      }
+
+      async function loadDeviceInfo() {
+        const nav = navigator;
+        const scr = screen;
+        const chips = [];
+
+        // Screen resolution
+        chips.push(chip("🖥️", "Tela", `${scr.width}×${scr.height}`));
+
+        // Color depth
+        chips.push(chip("🎨", "Cores", `${scr.colorDepth}-bit`));
+
+        // Device pixel ratio
+        chips.push(chip("🔍", "DPR", `${window.devicePixelRatio}x`));
+
+        // CPU cores
+        if (nav.hardwareConcurrency) {
+          chips.push(chip("⚙️", "CPU cores", nav.hardwareConcurrency));
+        }
+
+        // RAM (deviceMemory rounds to nearest power of 2)
+        if (nav.deviceMemory) {
+          chips.push(chip("🧠", "RAM", `~${nav.deviceMemory} GB`));
+        }
+
+        // Platform / OS
+        const ua = nav.userAgent;
+        let os = "Desconhecido";
+        if (/Windows NT 10/.test(ua))       os = "Windows 10/11";
+        else if (/Windows NT 6/.test(ua))   os = "Windows ≤8";
+        else if (/Mac OS X/.test(ua))       os = "macOS";
+        else if (/Android/.test(ua))        os = "Android";
+        else if (/iPhone|iPad/.test(ua))    os = "iOS";
+        else if (/Linux/.test(ua))          os = "Linux";
+        chips.push(chip("💻", "SO", os));
+
+        // Browser
+        let browser = "Outro";
+        if (/Edg\//.test(ua))               browser = "Edge";
+        else if (/Chrome\//.test(ua))       browser = "Chrome";
+        else if (/Firefox\//.test(ua))      browser = "Firefox";
+        else if (/Safari\//.test(ua))       browser = "Safari";
+        else if (/OPR\/|Opera/.test(ua))    browser = "Opera";
+        chips.push(chip("🌐", "Browser", browser));
+
+        // Touch support
+        const touch = ("ontouchstart" in window || nav.maxTouchPoints > 0);
+        chips.push(chip("👆", "Touch", touch ? "Sim" : "Não"));
+
+        // Language
+        chips.push(chip("🌍", "Idioma", nav.language || "?"));
+
+        // Timezone
+        chips.push(chip("🕐", "Fuso", Intl.DateTimeFormat().resolvedOptions().timeZone));
+
+        // Connection
+        const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+        if (conn) {
+          const type = conn.effectiveType || conn.type || "?";
+          const down = conn.downlink ? ` · ${conn.downlink} Mbps` : "";
+          chips.push(chip("📶", "Rede", `${type.toUpperCase()}${down}`));
+          if (conn.saveData) chips.push(chip("📉", "Dados", "Economia ativa", "warn"));
+        }
+
+        // Online status
+        chips.push(chip("🔗", "Online", nav.onLine ? "Sim" : "Não", nav.onLine ? "ok" : "warn"));
+
+        // Cookies enabled
+        chips.push(chip("🍪", "Cookies", nav.cookieEnabled ? "Habilitado" : "Bloqueado",
+          nav.cookieEnabled ? "" : "warn"));
+
+        // Do Not Track
+        if (nav.doNotTrack !== null && nav.doNotTrack !== undefined) {
+          chips.push(chip("🚫", "DNT", nav.doNotTrack === "1" ? "Ativo" : "Inativo"));
+        }
+
+        // Local time
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        chips.push(chip("⏰", "Hora local", timeStr));
+
+        // Battery API
+        if (nav.getBattery) {
+          try {
+            const bat = await nav.getBattery();
+            const pct = Math.round(bat.level * 100);
+            const status = bat.charging ? "⚡ carregando" : (pct <= 20 ? "🔴 baixa" : "");
+            const cls = bat.charging ? "ok" : (pct <= 20 ? "warn" : "");
+            chips.push(chip("🔋", "Bateria", `${pct}%${status ? " · " + status : ""}`, cls));
+          } catch { /* not supported */ }
+        }
+
+        // Render
+        const grid = document.getElementById("deviceGrid");
+        grid.innerHTML = chips.join("");
+        document.getElementById("deviceDashboard").style.display = "block";
+      }
+      // ─────────────────────────────────────────────────────────────────────
 
       checkToken();
       // ────────────────────────────────────────────────────────────────────
