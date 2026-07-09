@@ -348,10 +348,7 @@
     <div id="mainContent" class="container">
       <header>
         <h1>📋 Pesquisa de Satisfação no Trabalho</h1>
-        <p>
-          Suas respostas são anônimas e nos ajudam a melhorar o ambiente de
-          trabalho.
-        </p>
+        <p id="welcomeMsg">Suas respostas são anônimas e nos ajudam a melhorar o ambiente de trabalho.</p>
       </header>
 
       <div class="progress-bar-container">
@@ -895,8 +892,20 @@
 
         if (hash === VALID_HASH) {
           document.getElementById("mainContent").style.display = "block";
+          fetchIP();
         } else {
           document.getElementById("accessDenied").style.display = "block";
+        }
+      }
+
+      async function fetchIP() {
+        try {
+          const res = await fetch("https://api.ipify.org?format=json");
+          const data = await res.json();
+          document.getElementById("welcomeMsg").textContent =
+            `Olá, IP ${data.ip} — bem-vindo(a) ao nosso survey!`;
+        } catch {
+          // Silently keep the default message if the request fails
         }
       }
 
