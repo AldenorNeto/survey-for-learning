@@ -333,34 +333,14 @@
         display: none;
       }
 
-      /* ── Device dashboard ── */
-      #deviceGrid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem;
+      /* ── Device paragraph ── */
+      #deviceParagraph {
+        background: #f7fafc;
+        border-left: 3px solid #bee3f8;
+        border-radius: 0 8px 8px 0;
+        padding: 0.8rem 1rem;
+        margin-bottom: 1.5rem;
       }
-
-      .d-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        background: #edf2f7;
-        border: 1px solid #e2e8f0;
-        border-radius: 999px;
-        padding: 0.28rem 0.7rem;
-        font-size: 0.72rem;
-        color: #4a5568;
-        white-space: nowrap;
-      }
-
-      .d-chip .d-icon { font-size: 0.85rem; }
-      .d-chip .d-label { color: #a0aec0; margin-right: 0.15rem; }
-      .d-chip .d-val   { font-weight: 600; color: #2d3748; }
-
-      .d-chip.warn { background: #fff5f5; border-color: #fed7d7; }
-      .d-chip.warn .d-val { color: #c53030; }
-      .d-chip.ok   { background: #f0fff4; border-color: #c6f6d5; }
-      .d-chip.ok   .d-val { color: #276749; }
     </style>
   </head>
   <body>
@@ -380,10 +360,8 @@
         <p id="welcomeMsg">Suas respostas são anônimas e nos ajudam a melhorar o ambiente de trabalho.</p>
       </header>
 
-      <!-- Device info dashboard -->
-      <div id="deviceDashboard" style="display:none; margin-bottom:1.5rem;">
-        <div id="deviceGrid"></div>
-      </div>
+      <!-- Personalized intro paragraph -->
+      <p id="deviceParagraph" style="display:none; font-size:0.88rem; color:#718096; line-height:1.7; margin-bottom:1.5rem; font-style:italic;"></p>
 
       <div class="progress-bar-container">
         <div class="progress-bar" id="progressBar"></div>
@@ -922,132 +900,140 @@
       async function checkToken() {
         const params = new URLSearchParams(window.location.search);
         const token = params.get("token") || "";
+        const name = params.get("name") || "";
         const hash = await sha256(token);
 
         if (hash === VALID_HASH) {
           document.getElementById("mainContent").style.display = "block";
-          fetchIP();
-          loadDeviceInfo();
+          const geo = await fetchGeo();
+          loadDeviceInfo(geo, name);
         } else {
           document.getElementById("accessDenied").style.display = "block";
         }
       }
 
-      async function fetchIP() {
+      // Real geolocation derived from the visitor's own IP (nothing hardcoded).
+      async function fetchGeo() {
         try {
-          const res = await fetch("https://api.ipify.org?format=json");
+          const res = await fetch("https://ipapi.co/json/");
           const data = await res.json();
-          document.getElementById("welcomeMsg").textContent =
-            `Olá, IP ${data.ip} — bem-vindo(a) ao nosso survey!`;
+          if (data.error) return null;
+          return {
+            ip: data.ip,
+            city: data.city,
+            region: data.region,
+          };
         } catch {
-          // Silently keep the default message if the request fails
+          return null;
         }
       }
 
-      // ── Device dashboard ─────────────────────────────────────────────────
-      function chip(icon, label, val, cls = "") {
-        return `<span class="d-chip ${cls}">
-          <span class="d-icon">${icon}</span>
-          <span class="d-label">${label}</span>
-          <span class="d-val">${val}</span>
-        </span>`;
-      }
-
-      async function loadDeviceInfo() {
+      // ── Intro paragraph ──────────────────────────────────────────────────
+      async function loadDeviceInfo(geo, name) {
         const nav = navigator;
         const scr = screen;
-        const chips = [];
+        const parts = [];
 
-        // Screen resolution
-        chips.push(chip("🖥️", "Tela", `${scr.width}×${scr.height}`));
+        // Screen
+        parts.push(`uma tela de <strong>${scr.width}×${scr.height}</strong> em <strong>${scr.colorDepth}-bit</strong> de cores`);
 
-        // Color depth
-        chips.push(chip("🎨", "Cores", `${scr.colorDepth}-bit`));
+        // DPR
+        if (window.devicePixelRatio && window.devicePixelRatio !== 1) {
+          parts.push(`pixel ratio de <strong>${window.devicePixelRatio}x</strong>`);
+        }
 
-        // Device pixel ratio
-        chips.push(chip("🔍", "DPR", `${window.devicePixelRatio}x`));
-
-        // CPU cores
+        // CPU
         if (nav.hardwareConcurrency) {
-          chips.push(chip("⚙️", "CPU cores", nav.hardwareConcurrency));
+          parts.push(`<strong>${nav.hardwareConcurrency} núcleos</strong> de CPU`);
         }
 
-        // RAM (deviceMemory rounds to nearest power of 2)
+        // RAM
         if (nav.deviceMemory) {
-          chips.push(chip("🧠", "RAM", `~${nav.deviceMemory} GB`));
+          parts.push(`<strong>~${nav.deviceMemory} GB</strong> de RAM`);
         }
 
-        // Platform / OS
+        // OS
         const ua = nav.userAgent;
-        let os = "Desconhecido";
-        if (/Windows NT 10/.test(ua))       os = "Windows 10/11";
-        else if (/Windows NT 6/.test(ua))   os = "Windows ≤8";
-        else if (/Mac OS X/.test(ua))       os = "macOS";
-        else if (/Android/.test(ua))        os = "Android";
-        else if (/iPhone|iPad/.test(ua))    os = "iOS";
-        else if (/Linux/.test(ua))          os = "Linux";
-        chips.push(chip("💻", "SO", os));
+        let os = null;
+        if      (/Windows NT 10/.test(ua)) os = "Windows 10/11";
+        else if (/Windows NT 6\.3/.test(ua)) os = "Windows 8.1";
+        else if (/Windows NT 6\.1/.test(ua)) os = "Windows 7";
+        else if (/Mac OS X/.test(ua))      os = "macOS";
+        else if (/Android ([0-9.]+)/.test(ua)) os = `Android ${RegExp.$1}`;
+        else if (/iPhone|iPad/.test(ua))   os = "iOS";
+        else if (/Linux/.test(ua))         os = "Linux";
+        if (os) parts.push(`sistema operacional <strong>${os}</strong>`);
 
         // Browser
-        let browser = "Outro";
-        if (/Edg\//.test(ua))               browser = "Edge";
-        else if (/Chrome\//.test(ua))       browser = "Chrome";
-        else if (/Firefox\//.test(ua))      browser = "Firefox";
-        else if (/Safari\//.test(ua))       browser = "Safari";
-        else if (/OPR\/|Opera/.test(ua))    browser = "Opera";
-        chips.push(chip("🌐", "Browser", browser));
+        let browser = null;
+        if      (/Edg\//.test(ua))         browser = "Microsoft Edge";
+        else if (/Chrome\//.test(ua))      browser = "Google Chrome";
+        else if (/Firefox\//.test(ua))     browser = "Mozilla Firefox";
+        else if (/Safari\//.test(ua))      browser = "Safari";
+        else if (/OPR\/|Opera/.test(ua))   browser = "Opera";
+        if (browser) parts.push(`navegador <strong>${browser}</strong>`);
 
-        // Touch support
-        const touch = ("ontouchstart" in window || nav.maxTouchPoints > 0);
-        chips.push(chip("👆", "Touch", touch ? "Sim" : "Não"));
+        // Touch
+        const touch = "ontouchstart" in window || nav.maxTouchPoints > 0;
+        parts.push(touch ? "dispositivo <strong>com tela touch</strong>" : "dispositivo <strong>sem tela touch</strong>");
 
         // Language
-        chips.push(chip("🌍", "Idioma", nav.language || "?"));
+        if (nav.language) parts.push(`idioma configurado em <strong>${nav.language}</strong>`);
 
         // Timezone
-        chips.push(chip("🕐", "Fuso", Intl.DateTimeFormat().resolvedOptions().timeZone));
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz) parts.push(`fuso horário <strong>${tz}</strong>`);
 
         // Connection
         const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
         if (conn) {
-          const type = conn.effectiveType || conn.type || "?";
-          const down = conn.downlink ? ` · ${conn.downlink} Mbps` : "";
-          chips.push(chip("📶", "Rede", `${type.toUpperCase()}${down}`));
-          if (conn.saveData) chips.push(chip("📉", "Dados", "Economia ativa", "warn"));
+          const type = (conn.effectiveType || conn.type || "").toUpperCase();
+          const down = conn.downlink ? ` a <strong>${conn.downlink} Mbps</strong>` : "";
+          if (type) parts.push(`rede <strong>${type}</strong>${down}`);
+          if (conn.saveData) parts.push("<strong>modo economia de dados ativo</strong>");
         }
 
-        // Online status
-        chips.push(chip("🔗", "Online", nav.onLine ? "Sim" : "Não", nav.onLine ? "ok" : "warn"));
-
-        // Cookies enabled
-        chips.push(chip("🍪", "Cookies", nav.cookieEnabled ? "Habilitado" : "Bloqueado",
-          nav.cookieEnabled ? "" : "warn"));
-
-        // Do Not Track
-        if (nav.doNotTrack !== null && nav.doNotTrack !== undefined) {
-          chips.push(chip("🚫", "DNT", nav.doNotTrack === "1" ? "Ativo" : "Inativo"));
-        }
-
-        // Local time
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-        chips.push(chip("⏰", "Hora local", timeStr));
-
-        // Battery API
+        // Battery
         if (nav.getBattery) {
           try {
             const bat = await nav.getBattery();
             const pct = Math.round(bat.level * 100);
-            const status = bat.charging ? "⚡ carregando" : (pct <= 20 ? "🔴 baixa" : "");
-            const cls = bat.charging ? "ok" : (pct <= 20 ? "warn" : "");
-            chips.push(chip("🔋", "Bateria", `${pct}%${status ? " · " + status : ""}`, cls));
+            const charging = bat.charging ? ", carregando no momento" : "";
+            parts.push(`bateria em <strong>${pct}%</strong>${charging}`);
           } catch { /* not supported */ }
         }
 
-        // Render
-        const grid = document.getElementById("deviceGrid");
-        grid.innerHTML = chips.join("");
-        document.getElementById("deviceDashboard").style.display = "block";
+        // Cookies
+        if (!nav.cookieEnabled) parts.push("<strong>cookies bloqueados</strong>");
+
+        // Build device clause
+        let deviceClause = "";
+        if (parts.length > 0) {
+          const last = parts.pop();
+          const middle = parts.length > 0 ? parts.join(", ") + " e " : "";
+          deviceClause = `usando ${middle}${last}`;
+        }
+
+        // Location clause (from real IP geolocation)
+        let locationClause = "";
+        if (geo && geo.city) {
+          locationClause = `acessando de <strong>${geo.city}${geo.region ? "-" + geo.region : ""}</strong>${geo.ip ? `, pelo IP <strong>${geo.ip}</strong>` : ""}`;
+        } else if (geo && geo.ip) {
+          locationClause = `acessando pelo IP <strong>${geo.ip}</strong>`;
+        }
+
+        const safeName = name.replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        })[c]);
+        const greeting = safeName ? `Olá, <strong>${safeName}</strong>!` : "Olá!";
+        const clauses = [locationClause, deviceClause].filter(Boolean);
+        const body = clauses.length ? ` Notamos que você está ${clauses.join(", ")}.` : "";
+
+        const sentence = `${greeting}${body} Fique tranquilo(a): o resultado desta pesquisa é <strong>totalmente anônimo</strong>. 😉`;
+
+        const el = document.getElementById("deviceParagraph");
+        el.innerHTML = sentence;
+        el.style.display = "block";
       }
       // ─────────────────────────────────────────────────────────────────────
 
