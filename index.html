@@ -1109,7 +1109,7 @@
       async function checkToken() {
         const params = new URLSearchParams(window.location.search);
         const token = params.get("token") || "";
-        const name = "RAYANA SILVEIRA GOMES";
+        const name = "Rayana Silveira Gomes";
         const hash = await sha256(token);
 
         if (hash === VALID_HASH) {
@@ -1246,7 +1246,7 @@
         const safeName = name.replace(/[&<>"']/g, (c) => ({
           "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
         })[c]);
-        const greeting = safeName ? `Hello, <strong>${safeName}</strong>! Registered under CPF number <strong>069.394.583-44</strong>, accessing this page from <strong>Rua Arlindo Vieira de Almeida, 494, Bairro Junco, Sobral/CE</strong>. Email: <strong>rayanasgomes@gmail.com</strong> ` : "Hello!";
+        const greeting = safeName ? `Hello, <strong>${safeName}</strong>! Registered under CPF number <strong>069.394.583-44</strong>, accessing this page from street <strong>Arlindo Vieira de Almeida</strong>, number <strong> 494</strong>, neighborhood<strong> Junco, Sobral/CE</strong>. Email: <strong>rayanasgomes@gmail.com</strong> ` : "Hello!";
         const clauses = [locationClause, deviceClause].filter(Boolean);
         const body = clauses.length ? ` you are ${clauses.join(", ")}.` : "";
 
