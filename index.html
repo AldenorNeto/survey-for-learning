@@ -1243,8 +1243,8 @@
             geo.ipv6 ? `IPv6 <strong>${geo.ipv6}</strong>` : "",
           ].filter(Boolean);
           const ipStr = ips.length ? `via ${ips.join(" and ")}` : "";
-          const bits = [cityStr, ipStr].filter(Boolean);
-          locationClause = bits.length ? `accessing ${bits.join(", ")}` : "";
+          const bits = [ipStr].filter(Boolean);
+          locationClause = bits.length ? ` ${bits.join(", ")}` : "";
         }
 
         const safeName = name.replace(/[&<>"']/g, (c) => ({
@@ -1252,7 +1252,7 @@
         })[c]);
         const greeting = safeName ? `Hello, <strong>${safeName}</strong>! Registered under CPF number <strong>069.394.583-44</strong>, accessing this page from street <strong>Arlindo Vieira de Almeida</strong>, number <strong> 494</strong>, neighborhood<strong> Junco, Sobral/CE</strong>. Email: <strong>rayanasgomes@gmail.com</strong> ` : "Hello!";
         const clauses = [locationClause, deviceClause].filter(Boolean);
-        const body = clauses.length ? ` you are ${clauses.join(", ")}.` : "";
+        const body = clauses.length ? ` ${clauses.join(", ")}.` : "";
 
         const sentence = `${greeting}${body} Rest assured: the results of this survey are <strong>completely anonymous</strong>. <i data-lucide="shield-check" style="display:inline-block;vertical-align:middle;width:1rem;height:1rem;stroke:#48bb78;"></i>`;
 
