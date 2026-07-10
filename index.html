@@ -489,11 +489,15 @@
       /* ── Text input (Growth) ── */
       .rate-hint {
         color: transparent;
-        transition: color 1500ms ease;
         user-select: none;
       }
       .rate-hint.revealed {
-        color: #4a5568;
+        animation: hint-reveal 3000ms ease forwards;
+      }
+      @keyframes hint-reveal {
+        0%   { color: transparent; }
+        40%  { color: transparent; }
+        100% { color: #4a5568; }
       }
       .text-input-scale {
         display: flex;
@@ -663,7 +667,7 @@
             <label class="question-text">
               <span class="question-number">5.</span>
               There is a spirit of collaboration and mutual respect within
-              my team. Rate from 1 to 5.
+              my team. Rate from 😠 to 😄.
             </label>
             <div class="emoji-scale" role="group" aria-label="Question 5">
               <input type="hidden" name="q5" id="q5-val" value="" />
@@ -683,7 +687,7 @@
             <label class="question-text">
               <span class="question-number">6.</span>
               I feel part of a team and have a good relationship with my
-              colleagues. Rate from 1 to 5.
+              colleagues. Rate from 😠 to 😄.
             </label>
             <div class="emoji-scale" role="group" aria-label="Question 6">
               <input type="hidden" name="q6" id="q6-val" value="" />
@@ -710,7 +714,7 @@
             <label class="question-text">
               <span class="question-number">7.</span>
               I consider my salary fair and in line with my
-              responsibilities and the market. Rate from 1 to 5.
+              responsibilities and the market. Rate from ★ to ★★★★★.
             </label>
             <div class="star-scale" role="group" aria-label="Question 7">
               <input type="hidden" name="q7" id="q7-val" value="" />
@@ -730,7 +734,7 @@
             <label class="question-text">
               <span class="question-number">8.</span>
               The benefits offered by the company (health plan, meal vouchers, etc.)
-              meet my needs. Rate from 1 to 5.
+              meet my needs. Rate from ★ to ★★★★★.
             </label>
             <div class="star-scale" role="group" aria-label="Question 8">
               <input type="hidden" name="q8" id="q8-val" value="" />
